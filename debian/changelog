@@ -1,4 +1,10 @@
-cosmic-applets (0.1.0) UNRELEASED; urgency=medium
+cosmic-applets (0.1.0ubuntu2) noble; urgency=medium
+
+  * Resync
+
+ -- Aaron Honeycutt <aaron@system76.com>  Fri, 29 Mar 2024 10:58:23 -0600
+
+cosmic-applets (0.1.0) jammy; urgency=medium
 
   * Initial release.
 
