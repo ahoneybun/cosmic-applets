@@ -390,7 +390,6 @@ struct PulseServer {
     mainloop: Rc<RefCell<Mainloop>>,
     context: Rc<RefCell<Context>>,
     introspector: Introspector,
-    last_playback: Instant,
 }
 
 #[derive(Clone, Debug)]
@@ -437,7 +436,6 @@ impl PulseServer {
             mainloop,
             context,
             introspector,
-            last_playback: Instant::now(),
         })
     }
 
@@ -635,21 +633,25 @@ impl PulseServer {
     fn set_sink_volume_by_name(&mut self, name: &str, volume: &ChannelVolumes) {
         let op = self
             .introspector
-            .set_sink_volume_by_name(name, volume, None);
+            .set_sink_mute_by_name(name, volume.is_muted(), None);
         self.wait_for_result(op).ok();
 
-        let now = Instant::now();
-        if now.duration_since(self.last_playback) > Duration::from_millis(250) {
-            self.last_playback = now;
-            crate::pipewire::play_audio_volume_change();
-        }
+        let op = self
+            .introspector
+            .set_sink_volume_by_name(name, volume, None);
+        self.wait_for_result(op).ok();
     }
 
     fn set_source_volume_by_name(&mut self, name: &str, volume: &ChannelVolumes) {
         let op = self
             .introspector
+            .set_source_mute_by_name(name, volume.is_muted(), None);
+        let _ = self.wait_for_result(op);
+
+        let op = self
+            .introspector
             .set_source_volume_by_name(name, volume, None);
-        self.wait_for_result(op).ok();
+        let _ = self.wait_for_result(op);
     }
 
     fn get_source_outputs(&mut self, source: u32) -> Vec<u32> {
@@ -662,7 +664,7 @@ impl PulseServer {
                 }
             }
         });
-        self.wait_for_result(op).ok();
+        let _ = self.wait_for_result(op);
         result_ref.replace(Vec::new())
     }
 
@@ -676,7 +678,7 @@ impl PulseServer {
                 }
             }
         });
-        self.wait_for_result(op).ok();
+        let _ = self.wait_for_result(op);
         result_ref.replace(Vec::new())
     }
 
